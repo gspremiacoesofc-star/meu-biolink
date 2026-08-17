@@ -27,9 +27,6 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'segredo', resave: false, saveUninitialized: true }));
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
 const db = new sqlite3.Database('./database.db', (err) => {
     if (err) console.error('Erro ao abrir o banco de dados', err.message);
 });
@@ -60,17 +57,102 @@ db.serialize(() => {
     )`);
 });
 
+// Página Principal (Biolink)
 app.get('/', (req, res) => {
     db.get(`SELECT * FROM users WHERE id = 1`, (err, usuario) => {
-        if (err || !usuario) {
-            usuario = { title: 'GS PREMIAÇÕES', logo: '', meta_tags: '' };
-        }
+        const user = usuario || { title: 'GS PREMIAÇÕES', logo: '' };
         db.all(`SELECT * FROM links WHERE user_id = 1`, (err, links) => {
-            res.render('index', { usuario: usuario, links: links || [] });
+            const listaLinks = links || [];
+            
+            let linksHtml = listaLinks.length > 0 
+                ? listaLinks.map(l => `<a href="${l.url}" target="_blank" class="link-btn">${l.title}</a>`).join('')
+                : '<p style="color:#8d8d99;text-align:center;">Nenhum link cadastrado.</p>';
+
+            let logoHtml = user.logo 
+                ? `<img src="${user.logo}" alt="Logo" class="profile-img">`
+                : `<div class="profile-placeholder">🦅</div>`;
+
+            res.send(`<!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${user.title}</title>
+                <style>
+                    body {
+                        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+                        color: #fff;
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 100vh;
+                        box-sizing: border-box;
+                    }
+                    .container {
+                        width: 100%;
+                        max-width: 450px;
+                        text-align: center;
+                    }
+                    .profile-img, .profile-placeholder {
+                        width: 110px;
+                        height: 110px;
+                        border-radius: 50%;
+                        object-fit: cover;
+                        border: 3px solid #00b37e;
+                        box-shadow: 0 0 20px rgba(0, 179, 126, 0.6);
+                        margin: 0 auto 20px auto;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        background: #202024;
+                        font-size: 40px;
+                    }
+                    h1 {
+                        font-size: 24px;
+                        margin-bottom: 30px;
+                        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                    }
+                    .link-btn {
+                        display: block;
+                        background: rgba(255, 255, 255, 0.1);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        color: #fff;
+                        padding: 15px 20px;
+                        margin-bottom: 15px;
+                        border-radius: 30px;
+                        text-decoration: none;
+                        font-weight: bold;
+                        font-size: 16px;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                    }
+                    .link-btn:hover {
+                        background: #00b37e;
+                        border-color: #00b37e;
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 15px rgba(0, 179, 126, 0.4);
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    ${logoHtml}
+                    <h1>${user.title}</h1>
+                    <div class="links-container">
+                        ${linksHtml}
+                    </div>
+                </div>
+            </body>
+            </html>`);
         });
     });
 });
 
+// Tela de Login
 app.get('/auth/login', (req, res) => {
     res.send(`<!DOCTYPE html>
     <html lang="pt-BR">
@@ -96,6 +178,7 @@ app.post('/auth/login', (req, res) => {
     });
 });
 
+// Painel Administrativo
 app.get('/admin/painel', (req, res) => {
     if (!req.session.usuario) return res.redirect('/auth/login');
     const idDoUsuario = req.session.usuario.id || 1;
@@ -198,4 +281,4 @@ app.post('/admin/deletar-link/:id', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
-        
+    
