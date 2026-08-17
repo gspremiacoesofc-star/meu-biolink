@@ -2,15 +2,22 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Garante que a pasta public/uploads exista para evitar erros de imagem
+const uploadDir = path.join(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 // Configuração do Multer para upload de imagens
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, 'public/uploads'));
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
@@ -38,14 +45,14 @@ db.serialize(() => {
         title TEXT, 
         logo TEXT, 
         meta_tags TEXT
-    )`);
-    
-    db.get(`SELECT * FROM users WHERE id = 1`, (err, row) => {
-        if (!row) {
-            db.run(`INSERT INTO users (username, password, title, logo, meta_tags) VALUES ('admin', '123456', 'Meu Biolink', '', '')`);
-        }
+    )`, () => {
+        db.get(`SELECT * FROM users WHERE id = 1`, (err, row) => {
+            if (!row) {
+                db.run(`INSERT INTO users (username, password, title, logo, meta_tags) VALUES ('admin', '123456', 'Meu Biolink', '', '')`);
+            }
+        });
     });
-
+    
     db.run(`CREATE TABLE IF NOT EXISTS links (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         user_id INTEGER, 
@@ -54,11 +61,17 @@ db.serialize(() => {
     )`);
 });
 
-// Rota Principal (Página do Biolink)
+// Rota Principal (Com tratamento seguro contra erros)
 app.get('/', (req, res) => {
     db.get(`SELECT * FROM users WHERE id = 1`, (err, usuario) => {
+        if (err || !usuario) {
+            usuario = { title: 'Meu Biolink', logo: '', meta_tags: '' };
+        }
         db.all(`SELECT * FROM links WHERE user_id = 1`, (err, links) => {
-            res.render('index', { usuario: usuario || {}, links: links || [] });
+            if (err) {
+                links = [];
+            }
+            res.render('index', { usuario: usuario, links: links || [] });
         });
     });
 });
@@ -91,7 +104,7 @@ app.get('/admin/painel', (req, res) => {
     });
 });
 
-// Atualizar Configurações (Revisado e Corrigido)
+// Atualizar Configurações
 app.post('/admin/update-settings', upload.single('logotipo'), (req, res) => {
     if (!req.session.usuario) return res.redirect('/auth/login');
     const { title, meta_tags } = req.body;
@@ -120,4 +133,4 @@ app.post('/admin/adicionar-link', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
-                           
+                 
