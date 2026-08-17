@@ -53,7 +53,7 @@ db.serialize(() => {
     )`);
 });
 
-// Página Principal (Biolink)
+// Página Principal (Biolink com Rodapé)
 app.get('/', (req, res) => {
     db.get(`SELECT * FROM users WHERE id = 1`, (err, usuario) => {
         const title = (usuario && usuario.title) ? usuario.title : 'GS PREMIAÇÕES';
@@ -83,12 +83,13 @@ app.get('/', (req, res) => {
                 '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
                 '<title>' + title + '</title>' +
                 '<style>' +
-                    'body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; font-family: sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }' +
+                    'body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }' +
                     '.container { width: 100%; max-width: 450px; text-align: center; }' +
                     '.profile-img, .profile-placeholder { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #00b37e; box-shadow: 0 0 20px rgba(0, 179, 126, 0.6); margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center; background: #202024; font-size: 40px; }' +
                     'h1 { font-size: 24px; margin-bottom: 30px; }' +
                     '.link-btn { display: block; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 15px 20px; margin-bottom: 15px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 16px; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }' +
                     '.link-btn:hover { background: #00b37e; border-color: #00b37e; transform: translateY(-2px); }' +
+                    'footer { margin-top: 30px; font-size: 13px; color: #8d8d99; text-align: center; }' +
                 '</style>' +
             '</head>' +
             '<body>' +
@@ -97,6 +98,7 @@ app.get('/', (req, res) => {
                     '<h1>' + title + '</h1>' +
                     '<div class="links-container">' + linksHtml + '</div>' +
                 '</div>' +
+                '<footer>© 2026 ' + title + ' - Todos os direitos reservados.</footer>' +
             '</body>' +
             '</html>');
         });
@@ -241,4 +243,3 @@ app.post('/admin/deletar-link/:id', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
-                     
