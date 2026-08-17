@@ -47,7 +47,7 @@ db.serialize(() => {
             if (!row) {
                 db.run(`INSERT INTO users (username, password, title, logo, meta_tags) VALUES ('admin', '123456', 'GS PREMIAÇÕES', '', '')`);
             } else {
-                db.run(`UPDATE users SET title = 'GS PREMIAÇÕES' WHERE id = 1 AND (title = 'Meu Biolink' OR title = '')`);
+                db.run(`UPDATE users SET title = 'GS PREMIAÇÕES' WHERE id = 1`);
             }
         });
     });
@@ -60,7 +60,6 @@ db.serialize(() => {
     )`);
 });
 
-// Rota Principal
 app.get('/', (req, res) => {
     db.get(`SELECT * FROM users WHERE id = 1`, (err, usuario) => {
         if (err || !usuario) {
@@ -72,7 +71,6 @@ app.get('/', (req, res) => {
     });
 });
 
-// Rotas de Autenticação
 app.get('/auth/login', (req, res) => {
     res.send(`<!DOCTYPE html>
     <html lang="pt-BR">
@@ -98,7 +96,6 @@ app.post('/auth/login', (req, res) => {
     });
 });
 
-// Painel Administrativo Estilizado
 app.get('/admin/painel', (req, res) => {
     if (!req.session.usuario) return res.redirect('/auth/login');
     const idDoUsuario = req.session.usuario.id || 1;
@@ -107,39 +104,61 @@ app.get('/admin/painel', (req, res) => {
             res.send(`<!DOCTYPE html>
             <html lang="pt-BR">
             <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Painel Administrativo</title>
-            <style>body{background:#121214;color:#fff;font-family:sans-serif;padding:20px;margin:0;}
+            <style>
+            body{background:#121214;color:#fff;font-family:sans-serif;padding:20px;margin:0;}
             .container{max-width:600px;margin:0 auto;background:#202024;padding:25px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.6);}
             h2, h3{color:#00b37e;margin-top:0;}
             label{display:block;margin-top:12px;margin-bottom:5px;font-size:14px;color:#c4c4cc;}
             input[type="text"], input[type="file"]{width:100%;padding:12px;background:#121214;border:1px solid #29292e;color:#fff;border-radius:6px;box-sizing:border-box;}
             button{margin-top:15px;width:100%;padding:12px;background:#00b37e;border:none;color:#fff;font-weight:bold;border-radius:6px;cursor:pointer;}
             button:hover{background:#00875f;}
-            .link-item{background:#121214;padding:10px 15px;margin-top:8px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid #29292e;}
-            a{color:#00b37e;text-decoration:none;}
-            .logout{display:inline-block;margin-top:20px;color:#f75a68;text-align:center;width:100%;}</style></head>
-            <body><div class="container">
-            <h2>Painel GS Premiações</h2>
-            <form action="/admin/update-settings" method="POST" enctype="multipart/form-data">
-                <label>Título do Site:</label>
-                <input type="text" name="title" value="${usuario ? usuario.title : 'GS PREMIAÇÕES'}" required>
-                <label>Logotipo (Imagem de Perfil):</label>
-                <input type="file" name="logotipo">
-                <button type="submit">Salvar Configurações</button>
-            </form>
-            <hr style="border:0;border-top:1px solid #29292e;margin:25px 0;">
-            <h3>Adicionar Novo Link</h3>
-            <form action="/admin/adicionar-link" method="POST">
-                <label>Título do Link (ex: Grupo VIP, WhatsApp):</label>
-                <input type="text" name="title" required>
-                <label>URL do Link (ex: https://...):</label>
-                <input type="text" name="url" required>
-                <button type="submit">Adicionar Link</button>
-            </form>
-            <h3 style="margin-top:25px;">Seus Links Cadastrados:</h3>
-            ${links && links.length > 0 ? links.map(l => `<div class="link-item"><span><strong>${l.title}</strong><br><small>${l.url}</small></span></div>`).join('') : '<p style="color:#8d8d99;">Nenhum link cadastrado ainda.</p>'}
-            <a href="/" target="_blank" style="display:block;text-align:center;margin-top:20px;">Ver site no ar ↗</a>
-            <a href="/auth/login" class="logout">Sair do Painel</a>
-            </div></body></html>`);
+            .link-item{background:#121214;padding:12px;margin-top:10px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid #29292e;}
+            .link-info strong{color:#fff;font-size:15px;}
+            .link-info small{color:#8d8d99;word-break:break-all;}
+            .btn-delete{background:#f75a68;color:#fff;padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;width:auto;margin-top:0;}
+            .btn-delete:hover{background:#d93848;}
+            a.view-site{display:block;text-align:center;margin-top:20px;color:#00b37e;text-decoration:none;font-weight:bold;}
+            a.logout{display:block;margin-top:15px;color:#f75a68;text-align:center;text-decoration:none;}
+            </style></head>
+            <body>
+            <div class="container">
+                <h2>Painel GS Premiações</h2>
+                <form action="/admin/update-settings" method="POST" enctype="multipart/form-data">
+                    <label>Título do Site:</label>
+                    <input type="text" name="title" value="${usuario ? usuario.title : 'GS PREMIAÇÕES'}" required>
+                    <label>Logotipo (Imagem de Perfil):</label>
+                    <input type="file" name="logotipo">
+                    <button type="submit">Salvar Configurações</button>
+                </form>
+                
+                <hr style="border:0;border-top:1px solid #29292e;margin:25px 0;">
+                
+                <h3>Adicionar Novo Link</h3>
+                <form action="/admin/adicionar-link" method="POST">
+                    <label>Título do Link:</label>
+                    <input type="text" name="title" placeholder="Ex: Grupo VIP, Instagram" required>
+                    <label>URL do Link:</label>
+                    <input type="text" name="url" placeholder="https://..." required>
+                    <button type="submit">Adicionar Link</button>
+                </form>
+
+                <h3 style="margin-top:25px;">Seus Links Cadastrados:</h3>
+                ${links && links.length > 0 ? links.map(l => `
+                    <div class="link-item">
+                        <div class="link-info">
+                            <strong>${l.title}</strong><br>
+                            <small>${l.url}</small>
+                        </div>
+                        <form action="/admin/deletar-link/${l.id}" method="POST" style="margin:0;">
+                            <button type="submit" class="btn-delete">Excluir</button>
+                        </form>
+                    </div>
+                `).join('') : '<p style="color:#8d8d99;">Nenhum link cadastrado ainda.</p>'}
+
+                <a href="/" target="_blank" class="view-site">Ver site no ar ↗</a>
+                <a href="/auth/login" class="logout">Sair do Painel</a>
+            </div>
+            </body></html>`);
         });
     });
 });
@@ -168,7 +187,15 @@ app.post('/admin/adicionar-link', (req, res) => {
     });
 });
 
+app.post('/admin/deletar-link/:id', (req, res) => {
+    if (!req.session.usuario) return res.redirect('/auth/login');
+    const linkId = req.params.id;
+    db.run(`DELETE FROM links WHERE id = ?`, [linkId], () => {
+        res.redirect('/admin/painel');
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
-            
+        
