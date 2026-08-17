@@ -62,90 +62,43 @@ app.get('/', (req, res) => {
         db.all(`SELECT * FROM links WHERE user_id = 1`, (err, links) => {
             const listaLinks = links || [];
             
-            let linksHtml = listaLinks.length > 0 
-                ? listaLinks.map(l => `<a href="${l.url}" target="_blank" class="link-btn">${l.title}</a>`).join('')
-                : '<p style="color:#8d8d99;text-align:center;">Nenhum link cadastrado.</p>';
+            let linksHtml = '';
+            if (listaLinks.length > 0) {
+                for (let i = 0; i < listaLinks.length; i++) {
+                    let l = listaLinks[i];
+                    linksHtml += '<a href="' + l.url + '" target="_blank" class="link-btn">' + l.title + '</a>';
+                }
+            } else {
+                linksHtml = '<p style="color:#8d8d99;text-align:center;">Nenhum link cadastrado.</p>';
+            }
 
             let logoHtml = logo 
-                ? `<img src="${logo}" alt="Logo" class="profile-img">`
-                : `<div class="profile-placeholder">🦅</div>`;
+                ? '<img src="' + logo + '" alt="Logo" class="profile-img">'
+                : '<div class="profile-placeholder">🦅</div>';
 
-            res.send(`<!DOCTYPE html>
-            <html lang="pt-BR">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>${title}</title>
-                <style>
-                    body {
-                        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-                        color: #fff;
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        margin: 0;
-                        padding: 20px;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        min-height: 100vh;
-                        box-sizing: border-box;
-                    }
-                    .container {
-                        width: 100%;
-                        max-width: 450px;
-                        text-align: center;
-                    }
-                    .profile-img, .profile-placeholder {
-                        width: 110px;
-                        height: 110px;
-                        border-radius: 50%;
-                        object-fit: cover;
-                        border: 3px solid #00b37e;
-                        box-shadow: 0 0 20px rgba(0, 179, 126, 0.6);
-                        margin: 0 auto 20px auto;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        background: #202024;
-                        font-size: 40px;
-                    }
-                    h1 {
-                        font-size: 24px;
-                        margin-bottom: 30px;
-                        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-                    }
-                    .link-btn {
-                        display: block;
-                        background: rgba(255, 255, 255, 0.1);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid rgba(255, 255, 255, 0.2);
-                        color: #fff;
-                        padding: 15px 20px;
-                        margin-bottom: 15px;
-                        border-radius: 30px;
-                        text-decoration: none;
-                        font-weight: bold;
-                        font-size: 16px;
-                        transition: all 0.3s ease;
-                        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-                    }
-                    .link-btn:hover {
-                        background: #00b37e;
-                        border-color: #00b37e;
-                        transform: translateY(-2px);
-                        box-shadow: 0 6px 15px rgba(0, 179, 126, 0.4);
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    ${logoHtml}
-                    <h1>${title}</h1>
-                    <div class="links-container">
-                        ${linksHtml}
-                    </div>
-                </div>
-            </body>
-            </html>`);
+            res.send('<!DOCTYPE html>' +
+            '<html lang="pt-BR">' +
+            '<head>' +
+                '<meta charset="UTF-8">' +
+                '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+                '<title>' + title + '</title>' +
+                '<style>' +
+                    'body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; font-family: sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }' +
+                    '.container { width: 100%; max-width: 450px; text-align: center; }' +
+                    '.profile-img, .profile-placeholder { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #00b37e; box-shadow: 0 0 20px rgba(0, 179, 126, 0.6); margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center; background: #202024; font-size: 40px; }' +
+                    'h1 { font-size: 24px; margin-bottom: 30px; }' +
+                    '.link-btn { display: block; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 15px 20px; margin-bottom: 15px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 16px; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }' +
+                    '.link-btn:hover { background: #00b37e; border-color: #00b37e; transform: translateY(-2px); }' +
+                '</style>' +
+            '</head>' +
+            '<body>' +
+                '<div class="container">' +
+                    logoHtml +
+                    '<h1>' + title + '</h1>' +
+                    '<div class="links-container">' + linksHtml + '</div>' +
+                '</div>' +
+            '</body>' +
+            '</html>');
         });
     });
 });
@@ -187,64 +140,68 @@ app.get('/admin/painel', (req, res) => {
         db.all(`SELECT * FROM links WHERE user_id = ?`, [idDoUsuario], (err, links) => {
             const listaLinks = links || [];
 
-            res.send(`<!DOCTYPE html>
-            <html lang="pt-BR">
-            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Painel Administrativo</title>
-            <style>
-            body{background:#121214;color:#fff;font-family:sans-serif;padding:20px;margin:0;}
-            .container{max-width:600px;margin:0 auto;background:#202024;padding:25px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.6);}
-            h2, h3{color:#00b37e;margin-top:0;}
-            label{display:block;margin-top:12px;margin-bottom:5px;font-size:14px;color:#c4c4cc;}
-            input[type="text"], input[type="file"]{width:100%;padding:12px;background:#121214;border:1px solid #29292e;color:#fff;border-radius:6px;box-sizing:border-box;}
-            button{margin-top:15px;width:100%;padding:12px;background:#00b37e;border:none;color:#fff;font-weight:bold;border-radius:6px;cursor:pointer;}
-            button:hover{background:#00875f;}
-            .link-item{background:#121214;padding:12px;margin-top:10px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid #29292e;}
-            .link-info strong{color:#fff;font-size:15px;}
-            .link-info small{color:#8d8d99;word-break:break-all;}
-            .btn-delete{background:#f75a68;color:#fff;padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;width:auto;margin-top:0;}
-            .btn-delete:hover{background:#d93848;}
-            a.view-site{display:block;text-align:center;margin-top:20px;color:#00b37e;text-decoration:none;font-weight:bold;}
-            a.logout{display:block;margin-top:15px;color:#f75a68;text-align:center;text-decoration:none;}
-            </style></head>
-            <body>
-            <div class="container">
-                <h2>Painel GS Premiações</h2>
-                <form action="/admin/update-settings" method="POST" enctype="multipart/form-data">
-                    <label>Título do Site:</label>
-                    <input type="text" name="title" value="${title}" required>
-                    <label>Logotipo (Imagem de Perfil):</label>
-                    <input type="file" name="logotipo">
-                    <button type="submit">Salvar Configurações</button>
-                </form>
-                
-                <hr style="border:0;border-top:1px solid #29292e;margin:25px 0;">
-                
-                <h3>Adicionar Novo Link</h3>
-                <form action="/admin/adicionar-link" method="POST">
-                    <label>Título do Link:</label>
-                    <input type="text" name="title" placeholder="Ex: Grupo VIP, Instagram" required>
-                    <label>URL do Link:</label>
-                    <input type="text" name="url" placeholder="https://..." required>
-                    <button type="submit">Adicionar Link</button>
-                </form>
+            let linksHtml = '';
+            if (listaLinks.length > 0) {
+                for (let i = 0; i < listaLinks.length; i++) {
+                    let l = listaLinks[i];
+                    linksHtml += '<div class="link-item">' +
+                        '<div class="link-info">' +
+                            '<strong>' + l.title + '</strong><br>' +
+                            '<small>' + l.url + '</small>' +
+                        '</div>' +
+                        '<form action="/admin/deletar-link/' + l.id + '" method="POST" style="margin:0;">' +
+                            '<button type="submit" class="btn-delete">Excluir</button>' +
+                        '</form>' +
+                    '</div>';
+                }
+            } else {
+                linksHtml = '<p style="color:#8d8d99;">Nenhum link cadastrado ainda.</p>';
+            }
 
-                <h3 style="margin-top:25px;">Seus Links Cadastrados:</h3>
-                ${listaLinks.length > 0 ? listaLinks.map(l => `
-                    <div class="link-item">
-                        <div class="link-info">
-                            <strong>${l.title}</strong><br>
-                            <small>${l.url}</small>
-                        </div>
-                        <form action="/admin/deletar-link/${l.id}" method="POST" style="margin:0;">
-                            <button type="submit" class="btn-delete">Excluir</button>
-                        </form>
-                    </div>
-                `).join('') : '<p style="color:#8d8d99;">Nenhum link cadastrado ainda.</p>'}
-
-                <a href="/" target="_blank" class="view-site">Ver site no ar ↗</a>
-                <a href="/auth/login" class="logout">Sair do Painel</a>
-            </div>
-            </body></html>`);
+            res.send('<!DOCTYPE html>' +
+            '<html lang="pt-BR">' +
+            '<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Painel Administrativo</title>' +
+            '<style>' +
+            'body{background:#121214;color:#fff;font-family:sans-serif;padding:20px;margin:0;}' +
+            '.container{max-width:600px;margin:0 auto;background:#202024;padding:25px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.6);}' +
+            'h2, h3{color:#00b37e;margin-top:0;}' +
+            'label{display:block;margin-top:12px;margin-bottom:5px;font-size:14px;color:#c4c4cc;}' +
+            'input[type="text"], input[type="file"]{width:100%;padding:12px;background:#121214;border:1px solid #29292e;color:#fff;border-radius:6px;box-sizing:border-box;}' +
+            'button{margin-top:15px;width:100%;padding:12px;background:#00b37e;border:none;color:#fff;font-weight:bold;border-radius:6px;cursor:pointer;}' +
+            'button:hover{background:#00875f;}' +
+            '.link-item{background:#121214;padding:12px;margin-top:10px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid #29292e;}' +
+            '.link-info strong{color:#fff;font-size:15px;}' +
+            '.link-info small{color:#8d8d99;word-break:break-all;}' +
+            '.btn-delete{background:#f75a68;color:#fff;padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;width:auto;margin-top:0;}' +
+            '.btn-delete:hover{background:#d93848;}' +
+            'a.view-site{display:block;text-align:center;margin-top:20px;color:#00b37e;text-decoration:none;font-weight:bold;}' +
+            'a.logout{display:block;margin-top:15px;color:#f75a68;text-align:center;text-decoration:none;}' +
+            '</style></head>' +
+            '<body>' +
+            '<div class="container">' +
+                '<h2>Painel GS Premiações</h2>' +
+                '<form action="/admin/update-settings" method="POST" enctype="multipart/form-data">' +
+                    '<label>Título do Site:</label>' +
+                    '<input type="text" name="title" value="' + title + '" required>' +
+                    '<label>Logotipo (Imagem de Perfil):</label>' +
+                    '<input type="file" name="logotipo">' +
+                    '<button type="submit">Salvar Configurações</button>' +
+                '</form>' +
+                '<hr style="border:0;border-top:1px solid #29292e;margin:25px 0;">' +
+                '<h3>Adicionar Novo Link</h3>' +
+                '<form action="/admin/adicionar-link" method="POST">' +
+                    '<label>Título do Link:</label>' +
+                    '<input type="text" name="title" placeholder="Ex: Grupo VIP, Instagram" required>' +
+                    '<label>URL do Link:</label>' +
+                    '<input type="text" name="url" placeholder="https://..." required>' +
+                    '<button type="submit">Adicionar Link</button>' +
+                '</form>' +
+                '<h3 style="margin-top:25px;">Seus Links Cadastrados:</h3>' +
+                linksHtml +
+                '<a href="/" target="_blank" class="view-site">Ver site no ar ↗</a>' +
+                '<a href="/auth/login" class="logout">Sair do Painel</a>' +
+            '</div>' +
+            '</body></html>');
         });
     });
 });
@@ -284,4 +241,4 @@ app.post('/admin/deletar-link/:id', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
-             
+                            
