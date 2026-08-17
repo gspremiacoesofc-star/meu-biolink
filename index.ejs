@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= user.title %></title>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 20px 20px 20px; margin: 0; min-height: 100vh; box-sizing: border-box; }
+        .content { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; }
+        .logo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; border: 2px solid #38bdf8; box-shadow: 0 4px 10px rgba(56, 189, 248, 0.3); }
+        h1 { font-size: 1.5rem; margin-bottom: 30px; text-align: center; color: #38bdf8; }
+        .links-container { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+        .link-btn { display: block; background: #1e293b; color: #f8fafc; text-align: center; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 1px solid #334155; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .link-btn:hover { background: #334155; border-color: #38bdf8; }
+        footer { margin-top: 40px; text-align: center; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; width: 100%; max-width: 400px; padding-top: 15px; }
+        .certificate { display: inline-block; background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; margin-top: 8px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <% if (user.logo) { %>
+            <img src="/uploads/<%= user.logo %>" alt="Logo" class="logo">
+        <% } %>
+        <h1><%= user.title %></h1>
+        
+        <div class="links-container">
+            <% if (links && links.length > 0) { %>
+                <% links.forEach(link => { %>
+                    <a href="<%= link.url %>" class="link-btn" target="_blank"><%= link.title %></a>
+                <% }) %>
+            <% } else { %>
+                <p style="color: #94a3b8; text-align: center;">Nenhum link disponível no momento.</p>
+            <% } %>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 <%= user.title %> - Todos os direitos reservados.</p>
+        <div class="certificate">🔒 Site Verificado & Certificado SSL</div>
+    </footer>
+</body>
+</html>
