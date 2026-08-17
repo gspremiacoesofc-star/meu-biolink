@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Administrativo</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: #fff; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 10px; }
+        input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Painel de Controle</h1>
+        <form action="/admin/update-settings" method="POST" enctype="multipart/form-data">
+            <input type="text" name="title" value="<%= usuario.title %>" placeholder="Título da página">
+            <input type="file" name="logotipo">
+            <input type="text" name="meta_tags" value="<%= usuario.meta_tags || '' %>" placeholder="Meta Tags">
+            <button type="submit">Salvar Configurações</button>
+        </form>
+        <hr>
+        <h2>Adicionar Link</h2>
+        <form action="/admin/adicionar-link" method="POST">
+            <input type="text" name="title" placeholder="Título" required>
+            <input type="url" name="url" placeholder="URL" required>
+            <button type="submit">Adicionar Link</button>
+        </form>
+    </div>
+</body>
+</html>
