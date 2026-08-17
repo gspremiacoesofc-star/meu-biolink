@@ -14,12 +14,8 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage: storage });
 
@@ -60,7 +56,9 @@ db.serialize(() => {
 // Página Principal (Biolink)
 app.get('/', (req, res) => {
     db.get(`SELECT * FROM users WHERE id = 1`, (err, usuario) => {
-        const user = usuario || { title: 'GS PREMIAÇÕES', logo: '' };
+        const title = (usuario && usuario.title) ? usuario.title : 'GS PREMIAÇÕES';
+        const logo = (usuario && usuario.logo) ? usuario.logo : '';
+
         db.all(`SELECT * FROM links WHERE user_id = 1`, (err, links) => {
             const listaLinks = links || [];
             
@@ -68,8 +66,8 @@ app.get('/', (req, res) => {
                 ? listaLinks.map(l => `<a href="${l.url}" target="_blank" class="link-btn">${l.title}</a>`).join('')
                 : '<p style="color:#8d8d99;text-align:center;">Nenhum link cadastrado.</p>';
 
-            let logoHtml = user.logo 
-                ? `<img src="${user.logo}" alt="Logo" class="profile-img">`
+            let logoHtml = logo 
+                ? `<img src="${logo}" alt="Logo" class="profile-img">`
                 : `<div class="profile-placeholder">🦅</div>`;
 
             res.send(`<!DOCTYPE html>
@@ -77,7 +75,7 @@ app.get('/', (req, res) => {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>${user.title}</title>
+                <title>${title}</title>
                 <style>
                     body {
                         background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -141,7 +139,7 @@ app.get('/', (req, res) => {
             <body>
                 <div class="container">
                     ${logoHtml}
-                    <h1>${user.title}</h1>
+                    <h1>${title}</h1>
                     <div class="links-container">
                         ${linksHtml}
                     </div>
@@ -182,8 +180,13 @@ app.post('/auth/login', (req, res) => {
 app.get('/admin/painel', (req, res) => {
     if (!req.session.usuario) return res.redirect('/auth/login');
     const idDoUsuario = req.session.usuario.id || 1;
+    
     db.get(`SELECT * FROM users WHERE id = ?`, [idDoUsuario], (err, usuario) => {
+        const title = (usuario && usuario.title) ? usuario.title : 'GS PREMIAÇÕES';
+        
         db.all(`SELECT * FROM links WHERE user_id = ?`, [idDoUsuario], (err, links) => {
+            const listaLinks = links || [];
+
             res.send(`<!DOCTYPE html>
             <html lang="pt-BR">
             <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Painel Administrativo</title>
@@ -208,7 +211,7 @@ app.get('/admin/painel', (req, res) => {
                 <h2>Painel GS Premiações</h2>
                 <form action="/admin/update-settings" method="POST" enctype="multipart/form-data">
                     <label>Título do Site:</label>
-                    <input type="text" name="title" value="${usuario ? usuario.title : 'GS PREMIAÇÕES'}" required>
+                    <input type="text" name="title" value="${title}" required>
                     <label>Logotipo (Imagem de Perfil):</label>
                     <input type="file" name="logotipo">
                     <button type="submit">Salvar Configurações</button>
@@ -226,7 +229,7 @@ app.get('/admin/painel', (req, res) => {
                 </form>
 
                 <h3 style="margin-top:25px;">Seus Links Cadastrados:</h3>
-                ${links && links.length > 0 ? links.map(l => `
+                ${listaLinks.length > 0 ? listaLinks.map(l => `
                     <div class="link-item">
                         <div class="link-info">
                             <strong>${l.title}</strong><br>
@@ -252,7 +255,7 @@ app.post('/admin/update-settings', upload.single('logotipo'), (req, res) => {
     const idDoUsuario = req.session.usuario.id || 1;
 
     db.get(`SELECT logo FROM users WHERE id = ?`, [idDoUsuario], (err, row) => {
-        const logoptAtual = row ? row.logo : '';
+        const logoptAtual = (row && row.logo) ? row.logo : '';
         const logotipo = req.file ? '/uploads/' + req.file.filename : logoptAtual;
 
         db.run(`UPDATE users SET title = ?, logo = ? WHERE id = ?`, [title, logotipo, idDoUsuario], () => {
@@ -281,4 +284,4 @@ app.post('/admin/deletar-link/:id', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
-    
+             
