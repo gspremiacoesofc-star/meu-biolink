@@ -4,13 +4,20 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 const HOST = '0.0.0.0';
 
+// Garante que a pasta de uploads existe
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
-    destination: './public/uploads/',
+    destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 
@@ -75,7 +82,7 @@ app.post('/admin/update-settings', upload.single('logotipo'), (req, res) => {
         const logotipoAtual = row ? row.logo : '';
         const logotipo = req.file ? '/uploads/' + req.file.filename : logotipoAtual;
         
-        db.run(`UPDATE users SET title = ?, logo = ?, meta_tags = ? WHERE id = ?`, [title, logotipo, meta_tags, idDoUsuario], () => {
+        db.run(`UPDATE users SET title = ?, logo = ?, meta_tags = ? WHERE id = ?`, [title, logotipo, meta_tags || '', idDoUsuario], () => {
             res.redirect('/admin/painel');
         });
     });
@@ -93,4 +100,3 @@ app.post('/admin/adicionar-link', (req, res) => {
 app.listen(PORT, HOST, () => {
     console.log(`Servidor rodando em http://${HOST}:${PORT}`);
 });
-                
